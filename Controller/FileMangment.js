@@ -49,6 +49,20 @@ router.post('/createSubFolder',Auth,(req,res)=>{
 router.post('/uploadFile',Auth,(req,res)=>{ 
     console.log(req.body)
     const {path}=req.body
+    if (!req.files || !req.files.file) {
+        return res.status(400).json({ message: 'Please upload a file' });
+    }
+
+    s3.upload({
+        Bucket:process.env.AWS_BUCKET_NAME,
+        Key:`${req.user}/${path}`,
+        Body:req.files.file
+    }).then((data)=>{
+        res.status(200).json({message:`${data.location}`})
+    }).catch(err=>{
+        console.log(err)
+        res.status(400).json({messag:err})
+    })
     res.json({"path":`${req.user+'/'+path}`})
 })
 
@@ -69,6 +83,7 @@ router.post('/fileDelete',Auth,(req,res)=>{
     })
 
 })
+
 
 router.post('/fileUpdate',Auth,(req,res)=>{
 
