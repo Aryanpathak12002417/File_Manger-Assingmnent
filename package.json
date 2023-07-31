@@ -1,0 +1,27 @@
+{
+  "name": "propcity-assigmnent",
+  "version": "1.0.0",
+  "description": "Assigment Project for propcity",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "nodemon index.js"
+  },
+  "keywords": [
+    "AWS"
+  ],
+  "author": "Aryan Pathak",
+  "license": "ISC",
+  "dependencies": {
+    "aws-sdk": "^2.1425.0",
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-fileupload": "^1.4.0",
+    "jsonwebtoken": "^9.0.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.0.1"
+  }
+}
