@@ -1,28 +1,33 @@
 const express=require('express')
 const router=express.Router()
-const aws=require('aws-sdk')
 const fs=require('fs')
-const s3=new aws.S3({
-        accessKeyId: process.env.AWS_ACCESS_KEY,
-        secretAccessKey: process.env.AWS_SECRET_ACCESS_KEY
-    })
+const aws=require('../Utilies/aws')
+const db=require('../Utilies/database')
 
-const test=require('../Middleware/Tester')
+const s3=new aws.S3()
 const Auth = require('../Middleware/Auth')
 
 
 router.post('/createFolder',Auth,(req,res)=>{
+
     const {folderName}=req.body;
-    s3.putObject({
-        Bucket:process.env.AWS_BUCKET_NAME,
-        Key:`${req.user}+${folderName}`,
-        Body:''
-    }).then((data)=>{
-        console.log('Folder Created at'+ data.location);
-        res.send("Folder Uplaoded Successfully")
-    }).catch(err=>{
-        console.log(err)
-            res.send(err);
+    db.query(`INSERT INTO user_files (userHandle, file_path) VALUES ($1, $2) RETURNING *;`,[userHandle,`${req.user}/${folderName}`],(err,result)=>{
+        if(!err){
+            return res.status(500).json({message:"Internal Server Error"})
+        }
+
+        s3.putObject({
+            Bucket:process.env.AWS_BUCKET_NAME,
+            Key:`${req.user}/${folderName}`,
+            Body:''
+        }).then((data)=>{
+            console.log('Folder Created at'+ data.location);
+            res.send("Folder Uploaded Successfully")
+        }).catch(err=>{
+            console.log(err)
+                res.send(err);
+        })
+
     })
 
 })
@@ -31,9 +36,15 @@ router.post('/createFolder',Auth,(req,res)=>{
 router.post('/createSubFolder',Auth,(req,res)=>{
 
     const {parentPath,folderName}=req.body;
+    db.query(`INSERT INTO user_files (userHandle, file_path) VALUES ($1, $2) RETURNING *;`,[userHandle,`${req.user}/${parentPath+'/'+folderName}`],(err,result)=>{
+        if(!err){
+            return res.status(500).json({message:"Internal Server Error"})
+        }
+
+    })
     s3.putObject({
         Bucket:process.env.AWS_BUCKET_NAME,
-        Key:`${req.user}+${parentPath+'/'+folderName}`,
+        Key:`${req.user}/${parentPath+'/'+folderName}`,
         Body:''
     }).then((data)=>{
         console.log('Sub Folder Created at'+ data.location);
@@ -56,7 +67,7 @@ router.post('/uploadFile',Auth,(req,res)=>{
     s3.upload({
         Bucket:process.env.AWS_BUCKET_NAME,
         Key:`${req.user}/${path}`,
-        Body:req.files.file
+        Body:req.files.file.data
     }).then((data)=>{
         res.status(200).json({message:`${data.location}`})
     }).catch(err=>{
@@ -109,10 +120,6 @@ router.post('/fileUpdate',Auth,(req,res)=>{
     })
 
 
-})
-
-router.get('/testFile',Auth,(req,res)=>{
-    res.send('Auth Wroking Properly')
 })
 
 
